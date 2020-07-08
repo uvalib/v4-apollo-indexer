@@ -77,8 +77,15 @@ def runtimeField(node)
    end
 end
 
-def dateFields(node) 
-   "  <field name=\"published_daterange\">#{node['value']}</field>\n  <field name=\"published_display_a\">#{node['value']}</field>\n  <field name=\"published_date\">#{node['value']}T00:00:00Z</field>"
+def dateFields(node)
+  case node['value'].split('-').count
+  when 3
+    "  <field name=\"published_daterange\">#{node['value']}</field>\n  <field name=\"published_display_a\">#{node['value']}</field>\n  <field name=\"published_date\">#{node['value']}T00:00:00Z</field>"
+  when 2
+    "  <field name=\"published_daterange\">#{node['value']+ "-01"}</field>\n  <field name=\"published_display_a\">#{node['value']+ "-01"}</field>\n  <field name=\"published_date\">#{node['value']}-01T00:00:00Z</field>"
+  when 1
+    "  <field name=\"published_daterange\">#{node['value']+ "-01-01"}</field>\n  <field name=\"published_display_a\">#{node['value']+ "-01-01"}</field>\n  <field name=\"published_date\">#{node['value']}-01-01T00:00:00Z</field>"
+  end
 end
 
 def videoFields(node, parent)
