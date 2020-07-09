@@ -37,8 +37,8 @@ end
 
 def visit(node, parent=nil)
     #listMetadata node
-    if (node['type']['name'] == 'item' && !parent.nil?)
-    puts "Writing out #{getField(node, "wslsID")}"  
+    if (node['type']['name'] == 'item' && !parent.nil? && !getField(node, 'externalPID').empty?)
+        puts "Writing out #{getField(node, "wslsID")}"  
         createXmlDoc(node, parent)
     else 
       puts "Skipping #{node['type']['name']} node."
@@ -99,9 +99,9 @@ end
 def printSolrField(node, parent) 
   case node["type"]["name"]
   when "title"
-    pf "  <field name=\"title_tsearch_stored\">#{node['value']}</field>\n  <field name=\"full_title_tsearchf_stored\">WSLS_#{node['value']}</field>"
+    pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">WSLS_#{node['value'].encode(:xml => :text)}</field>"
   when "wslsTopic"
-    pf "<field name=\"subject_tsearchf_stored\">#{node['value']}</field>"
+    pf "<field name=\"subject_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>"
   when "duration"
     pf runtimeField(node)
   when "wslsColor"
@@ -109,7 +109,7 @@ def printSolrField(node, parent)
   when "wslsTag"
     pf wslsTagFields(node)
   when "abstract"
-    pf "  <field name=\"subject_summary_tsearch_stored\">#{node['value']}</field>"
+    pf "  <field name=\"subject_summary_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>"
   when "externalPID"
     pf pidFields(node)
   when "wslsID" 
