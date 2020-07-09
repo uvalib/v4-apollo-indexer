@@ -66,21 +66,41 @@ end
 
 def runtimeField(node)
    hm = node['value'].split(':')
-   if (hm.length == 2) then
-     if (hm[0].to_i > 0) then
-        return "<field name=\"video_run_time_a\">#{hm[0].to_i} minutes, #{hm[1].to_i} seconds</field>"
-     else
-        return "<field name=\"video_run_time_a\">#{hm[1].to_i} seconds</field>"
-     end
-   else 
-        return "<field name=\"video_run_time_a\">#{hm[0].to_i} seconds</field>"
-   end
+  case hm.length
+  when 3
+    if (hm[0].to_i > 0) then
+      return "<field name=\"video_run_time_a\">#{hm[0].to_i} hours, #{hm[1].to_i} minutes, #{hm[2].to_i} seconds</field>"
+    else
+      if (hm[1].to_i > 0) then
+        return "<field name=\"video_run_time_a\">#{hm[1].to_i} minutes, #{hm[2].to_i} seconds</field>"
+      else
+        return "<field name=\"video_run_time_a\">#{hm[2].to_i} seconds</field>"
+      end
+    end
+  when 2
+    if (hm[0].to_i > 0) then
+      return "<field name=\"video_run_time_a\">#{hm[0].to_i} minutes, #{hm[1].to_i} seconds</field>"
+    else
+      return "<field name=\"video_run_time_a\">#{hm[1].to_i} seconds</field>"
+    end
+  when 1
+    return "<field name=\"video_run_time_a\">#{hm[0].to_i} seconds</field>"
+  end
+   # if (hm.length == 2) then
+   #   if (hm[0].to_i > 0) then
+   #      return "<field name=\"video_run_time_a\">#{hm[0].to_i} minutes, #{hm[1].to_i} seconds</field>"
+   #   else
+   #      return "<field name=\"video_run_time_a\">#{hm[1].to_i} seconds</field>"
+   #   end
+   # else
+   #      return "<field name=\"video_run_time_a\">#{hm[0].to_i} seconds</field>"
+   # end
 end
 
 def dateFields(node)
   case node['value'].split('-').count
   when 3
-    "  <field name=\"published_daterange\">#{node['value']}</field>\n  <field name=\"published_display_a\">#{node['value']}</field>\n  <field name=\"published_date\">#{node['value']}T00:00:00Z</field>"
+    "  <field name=\"published_daterange\">#{node['value'].gsub("XX", "01")}</field>\n  <field name=\"published_display_a\">#{node['value'].gsub("XX", "01")}</field>\n  <field name=\"published_date\">#{node['value'].gsub("XX", "01")}T00:00:00Z</field>"
   when 2
     "  <field name=\"published_daterange\">#{node['value']+ "-01"}</field>\n  <field name=\"published_display_a\">#{node['value']+ "-01"}</field>\n  <field name=\"published_date\">#{node['value']}-01T00:00:00Z</field>"
   when 1
@@ -130,8 +150,13 @@ def printSolrField(node, parent)
   end
 end
 
-def pidFields(node) 
-    "<field name=\"id\">#{node['value']}</field>\n  <field name=\"url_str_stored\">https://curio.lib.virginia.edu/view/#{node['value']}</field>\n  <field name=\"url_label_str_stored\">View Video</field>\n  <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>"      
+def pidFields(node)
+  if $excerpt_hash.select{|h|h['pid']==node['value']}.empty?
+    "<field name=\"id\">#{node['value']}</field>\n  <field name=\"url_str_stored\">https://curio.lib.virginia.edu/view/#{node['value']}</field>\n  <field name=\"url_label_str_stored\">View Video</field>\n  <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>"
+  else
+    excerpt= $excerpt_hash.select{|h|h['pid']==node['value']}.first['excerpt']
+    "<field name=\"id\">#{node['value']}</field>\n  <field name=\"url_str_stored\">https://curio.lib.virginia.edu/view/#{node['value']}</field>\n  <field name=\"url_label_str_stored\">View Video</field>\n  <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>\n   <field name=\"script_excerpt_tsearch_stored\">#{excerpt}</field>"
+  end
 end
 
 def scriptFields(node, parent)
@@ -184,6 +209,8 @@ end
 conf.echo = false
 json_text = File.read("wsls.json")
 hash = JSON.parse(json_text);
+excerpt_text = File.read("wsls_excerpts_test.json")
+$excerpt_hash = JSON.parse(excerpt_text);
 pf '<add>'
 visit hash
 pf '</add>'
