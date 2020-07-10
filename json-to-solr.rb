@@ -37,7 +37,7 @@ end
 
 def visit(node, parent=nil)
     #listMetadata node
-    if (node['type']['name'] == 'item' && !parent.nil? && !getField(node, 'externalPID').empty?)
+    if (node['type']['name'] == 'item' && !parent.nil? && !getField(node, 'externalPID').empty? && !getField(node, "hasVideo") == "true")
         puts "Writing out #{getField(node, "wslsID")}"  
         createXmlDoc(node, parent)
     else 
