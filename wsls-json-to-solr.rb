@@ -37,7 +37,7 @@ end
 
 def visit(node, parent=nil)
     #listMetadata node
-    if (node['type']['name'] == 'item' && !parent.nil? && !getField(node, 'externalPID').empty? && !getField(node, "hasVideo") == "true")
+    if (node['type']['name'] == 'item' && !parent.nil? && !getField(node, 'externalPID').empty? && getField(node, "hasVideo") == "true")
         puts "Writing out #{getField(node, "wslsID")}"  
         createXmlDoc(node, parent)
     else 
@@ -119,7 +119,7 @@ end
 def printSolrField(node, parent) 
   case node["type"]["name"]
   when "title"
-    pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">WSLS_#{node['value'].encode(:xml => :text)}</field>"
+    pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>"
   when "wslsTopic"
     pf "<field name=\"subject_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>"
   when "duration"
@@ -131,7 +131,7 @@ def printSolrField(node, parent)
   when "abstract"
     pf "  <field name=\"subject_summary_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>"
   when "externalPID"
-    pf pidFields(node)
+    pf pidFields(node, parent)
   when "wslsID" 
     pf "  <field name=\"identifier_e_stored\">#{node['value']}</field>\n  <field name=\"work_title3_key_ssort_stored\">WSLS_#{node['value']}</field>\n  <field name=\"thumbnail_url_a\">https://wsls.lib.virginia.edu/#{node['value']}/#{node['value']}-thumbnail.jpg</field>"
   when "hasVideo"
@@ -150,12 +150,13 @@ def printSolrField(node, parent)
   end
 end
 
-def pidFields(node)
-  if $excerpt_hash.select{|h|h['pid']==node['value']}.empty?
+def pidFields(node, parent)
+  excerpt_object = $excerpt_hash.select{|h|!h.nil? && h['pid']==node['value']}
+  excerpt = excerpt_object.first['excerpt'] unless excerpt_object.nil? || excerpt_object.first.nil?
+  if (excerpt.nil? || !getField(parent, "abstract").empty?)
     "<field name=\"id\">#{node['value']}</field>\n  <field name=\"url_str_stored\">https://curio.lib.virginia.edu/view/#{node['value']}</field>\n  <field name=\"url_label_str_stored\">View Video</field>\n  <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>"
   else
-    excerpt= $excerpt_hash.select{|h|h['pid']==node['value']}.first['excerpt']
-    "<field name=\"id\">#{node['value']}</field>\n  <field name=\"url_str_stored\">https://curio.lib.virginia.edu/view/#{node['value']}</field>\n  <field name=\"url_label_str_stored\">View Video</field>\n  <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>\n   <field name=\"script_excerpt_tsearch_stored\">#{excerpt}</field>"
+    "<field name=\"id\">#{node['value']}</field>\n  <field name=\"url_str_stored\">https://curio.lib.virginia.edu/view/#{node['value']}</field>\n  <field name=\"url_label_str_stored\">View Video</field>\n  <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>\n   <field name=\"script_excerpt_tsearch_stored\">#{excerpt.encode(:xml => :text)}</field>"
   end
 end
 
@@ -209,7 +210,7 @@ end
 conf.echo = false
 json_text = File.read("wsls.json")
 hash = JSON.parse(json_text);
-excerpt_text = File.read("wsls_excerpts_test.json")
+excerpt_text = File.read("wsls_excerpts.json")
 $excerpt_hash = JSON.parse(excerpt_text);
 pf '<add>'
 visit hash
