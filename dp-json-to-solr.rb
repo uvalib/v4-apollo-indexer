@@ -27,17 +27,23 @@ def isContainer(node)
    node["type"]["container"]
 end
 
+$ancestorPIDs = []
 def visit(node, parent=nil)
     #listMetadata node
-    if node['type']['name'] == 'issue' && !parent.nil? && !getField(node, 'externalPID').empty?
+    if node['type']['name'] == 'collection' && !getField(node, 'externalPID').empty?
+        $ancestorPIDs[0]=getField(node, "externalPID")
+    elsif node['type']['name'] == 'year' && !getField(node, 'externalPID').empty?
+        $ancestorPIDs[1]=getField(node, "externalPID")
+    elsif node['type']['name'] == 'month' && !getField(node, 'externalPID').empty?
+        $ancestorPIDs[2]=getField(node, "externalPID")
+    elsif node['type']['name'] == 'issue' && !parent.nil? && !getField(node, 'externalPID').empty?
         puts "Writing out #{node['type']['name']}: #{getField(node, "externalPID")}"
-        monthID = getField(parent, "externalPID")
         createXmlDoc(node, parent)
     else
         puts "Skipping #{node['type']['name']} node."
     end
     node["children"].each do |child|
-       if (isContainer(child)) 
+       if (isContainer(child))
            visit(child, node)
        end    
     end
@@ -51,14 +57,6 @@ end
 
 def dateFields(node)
   "   <field name=\"published_date\">#{node['value']}</field>"
-  #case node['value'].split('-').count
-  #when 3
-  #  "  <field name=\"published_daterange\">#{node['value'].gsub("XX", "01")}</field>\n  <field name=\"published_display_a\">#{node['value'].gsub("XX", "01")}</field>\n  <field name=\"published_date\">#{node['value'].gsub("XX", "01")}T00:00:00Z</field>"
-  #when 2
-  #  "  <field name=\"published_daterange\">#{node['value']+ "-01"}</field>\n  <field name=\"published_display_a\">#{node['value']+ "-01"}</field>\n  <field name=\"published_date\">#{node['value']}-01T00:00:00Z</field>"
-  #when 1
-  #  "  <field name=\"published_daterange\">#{node['value']+ "-01-01"}</field>\n  <field name=\"published_display_a\">#{node['value']+ "-01-01"}</field>\n  <field name=\"published_date\">#{node['value']}-01-01T00:00:00Z</field>"
-  #end
 end
 
 def printSolrField(node, parent)
@@ -97,8 +95,9 @@ def createXmlDoc(node, parent)
   pf '  <field name="shadowed_location_f_stored">VISIBLE</field>'
   pf '  <field name="library_f_stored">Special Collections</field>'
   pf '  <field name="terms_of_use_a">Each user of the Daily Progress materials must individually evaluate any copyright or privacy issues that might pertain to the intended uses of these materials, including fair use. &lt;a href="https://copyright.library.virginia.edu/wsls_use/"&gt;Read More.&lt;/a&gt;</field>'
-  pf "<field name=\"identifier_e_stored\"> #{getField(parent, "externalPID")}</field>\n"
-  pf "<field name=\"identifier_e_stored\"> #{getField(parent, "externalPID")}</field>\n"
+  pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[0]}</field>"
+  pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[1]}</field>"
+  pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[2]}</field>"
   node["children"].each do |child|
     printSolrField child, node
   end
