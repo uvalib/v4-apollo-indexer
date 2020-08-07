@@ -39,6 +39,8 @@ def visit(node, parent=nil)
     elsif node['type']['name'] == 'issue' && !parent.nil? && !getField(node, 'externalPID').empty?
         puts "Writing out #{node['type']['name']}: #{getField(node, "externalPID")}"
         createXmlDoc(node, parent)
+    elsif node['type']['name'] == 'thumbm=nail'
+      puts "thumbnail here"
     else
         puts "Skipping #{node['type']['name']} node."
     end
@@ -63,7 +65,7 @@ def printSolrField(node, parent)
   #puts node["type"]["name"]
   case node["type"]["name"]
   when "title"
-    pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>"
+    pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"individual_call_number_a\">#{node['value'].encode(:xml => :text)}</field>"
   when "externalPID"
     pf pidFields(node)
   when "reel"
@@ -74,17 +76,34 @@ def printSolrField(node, parent)
 end
 
 def pidFields(node)
-    "<field name=\"id\">#{node['value']}</field>\n  <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>"
+    "<field name=\"id\">#{node['value']}</field>\n
+    <field name=\"alternate_id_f_stored\">#{node['value']}</field>\n
+    <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>\n
+    <field name=\"rights_wrapper_url_a\">http://rightswrapper2.lib.virginia.edu:8090/rights-wrapper/?pid=#{node['value']}&pagePid=</field>\n
+    <field name=\"work_title3_key_ssort_stored\">unique_#{node['value']}</field>
+    <field name=\"work_title2_key_ssort_stored\">unique_#{node['value']}</field>"
+    pf thumbnailFields(node['value'])
 end
 
 def reelFields(node)
   "<field name=\"reel\">#{node['value']}</field>\n"
 end
 
+def thumbnailFields(pid)
+  response = Net::HTTP.get_response URI.parse("https://iiifman.lib.virginia.edu/pid/#{pid}")
+  JSON.parse(response.body).each do |x|
+     if pid == "uva-lib:2070290"
+   #      puts x[0].dig(:sequence)
+     end
+  end
+  #"<field name="thumbnail_url_a">https://iiif.lib.virginia.edu/iiif/#{node['value']}/full/!200,200/0/default.jpg</field>"
+end
+
 def createXmlDoc(node, parent)
   #printout(node)
   pf "<doc>"
-  pf '  <field name="pool_f_stored"> daily_progress</field>'
+  #pf '  <field name="pool_f_stored"> daily_progress</field>'
+  pf ' <field name="pool_f_stored">serials</field>'
   pf '  <field name="uva_availability_f_stored">Online</field>'
   pf '  <field name="anon_availability_f_stored">Online</field>'
   pf '  <field name="format_f">Online</field>'
@@ -101,6 +120,12 @@ def createXmlDoc(node, parent)
   node["children"].each do |child|
     printSolrField child, node
   end
+  pf '  <field name="call_number_tsearch_stored"/>'
+  pf '  <field name="dailyprogress_tsearch">daily progress digitized microfilm digital scan newspaper charlottesville</field>'
+  pf '  <field name="pdf_url_a">https://pdfservice.lib.virginia.edu/pdf</field>'
+  pf '  <field name="feature_f_stored">iiif</field>'
+  pf '  <field name="feature_f_stored">rights_wrapper</field>'
+  pf '  <field name="feature_f_stored">pdf_service</field>'
   pf "</doc>"
 end
 
