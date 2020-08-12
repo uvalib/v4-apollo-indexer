@@ -1,5 +1,6 @@
 require 'json'
 require 'net/http'
+require 'date'
 
 def pf(string)
     File.write("daily-progress.xml", "#{string}\n", mode: "a")
@@ -45,25 +46,22 @@ def visit(node, parent=nil)
     node["children"].each do |child|
        if (isContainer(child))
            visit(child, node)
-       end    
+       end
     end
 end
 
 def listMetadata(node)
     node["children"].each do |child|
-       printout child unless isContainer(child)     
-    end 
-end
-
-def dateFields(node)
-  "   <field name=\"published_date\">#{node['value']}</field>"
+       printout child unless isContainer(child)
+    end
 end
 
 def printSolrField(node, parent)
   #puts node["type"]["name"]
   case node["type"]["name"]
   when "title"
-    pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"individual_call_number_a\">#{node['value'].encode(:xml => :text)}</field>\n"
+    date=DateTime.parse(node["value"].gsub(/Daily Progress, /,'')).strftime('%Y-%m-%d')
+    pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"individual_call_number_a\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"published_daterange\">#{date}</field>\n  <field name=\"published_display_a\">#{date}</field>\n  <field name=\"published_date\">#{date}T00:00:00Z</field>"
   when "externalPID"
     pf pidFields(node)
   when "reel"
@@ -78,7 +76,7 @@ def pidFields(node)
   sequences=JSON.parse(response.body).values_at("sequences")
   canvases=sequences[0][0]["canvases"]
   thumbnail=canvases[0]["thumbnail"]
-    "  <field name=\"id\">#{node['value']}</field>\n <field name=\"alternate_id_f_stored\">#{node['value']}</field>\n <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>\n <field name=\"rights_wrapper_url_a\">http://rightswrapper2.lib.virginia.edu:8090/rights-wrapper/?pid=#{node['value']}&pagePid=</field>\n <field name=\"work_title3_key_ssort_stored\">unique_#{node['value']}</field>\n <field name=\"work_title2_key_ssort_stored\">unique_#{node['value']}</field>\n <field name=\"thumbnail_url_a\">#{thumbnail}</field>\n"
+    "  <field name=\"id\">#{node['value']}</field>\n <field name=\"alternate_id_f_stored\">#{node['value']}</field>\n <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>\n <field name=\"rights_wrapper_url_a\">http://rightswrapper2.lib.virginia.edu:8090/rights-wrapper/?pid=#{node['value']}&amp;pagePid=</field>\n <field name=\"work_title3_key_ssort_stored\">unique_#{node['value']}</field>\n <field name=\"work_title2_key_ssort_stored\">unique_#{node['value']}</field>\n <field name=\"thumbnail_url_a\">#{thumbnail}</field>\n"
 end
 
 def reelFields(node)
@@ -98,7 +96,6 @@ def createXmlDoc(node, parent)
   pf '  <field name="digital_collection_f_stored">Daily Progress Digitized Microfilm</field>'
   pf '  <field name="shadowed_location_f_stored">VISIBLE</field>'
   pf '  <field name="library_f_stored">Special Collections</field>'
-  pf '  <field name="terms_of_use_a">Each user of the Daily Progress materials must individually evaluate any copyright or privacy issues that might pertain to the intended uses of these materials, including fair use. &lt;a href="https://copyright.library.virginia.edu/wsls_use/"&gt;Read More.&lt;/a&gt;</field>'
   pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[0]}</field>"
   pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[1]}</field>"
   pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[2]}</field>"
