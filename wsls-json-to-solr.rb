@@ -200,6 +200,7 @@ def createXmlDoc(node, parent)
   pf '  <field name="shadowed_location_f_stored">VISIBLE</field>'
   pf '  <field name="library_f_stored">Special Collections</field>'
   pf '  <field name="terms_of_use_a">Each user of the WSLS materials must individually evaluate any copyright or privacy issues that might pertain to the intended uses of these materials, including fair use. &lt;a href="https://copyright.library.virginia.edu/wsls_use/"&gt;Read More.&lt;/a&gt;</field>'
+  pf '  <field name="notes_f_stored">Please note, some contents from this collection may contain harmful, offensive, or insensitive language. In an effort to represent resources as accurately as possible, library staff transcribe information exactly as it appears in its original context.</field>'
   node["children"].each do |child|
     printSolrField child, node
   end
@@ -207,7 +208,7 @@ def createXmlDoc(node, parent)
 end
 
 
-conf.echo = false
+#conf.echo = false
 json_text = File.read("wsls.json")
 hash = JSON.parse(json_text);
 excerpt_text = File.read("wsls_excerpts.json")
