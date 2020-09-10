@@ -43,6 +43,38 @@ def isContainer(node)
    node["type"]["container"]
 end
 
+def dedupeField(node, field, parent=nil) 
+  if (node['type']['name'] == 'item') 
+    # find all the fields
+    dateIndexes = []
+    mostRecent = nil
+    node["children"].each_with_index do |child, index| 
+       if (child["type"]["name"] == field)
+         dateIndexes.insert(0,index) # put these at the beginning to ensure that they are sorted highest to lowest so when we delete them they don't change the indexes of the remaining items
+         if mostRecent.nil? || (mostRecent < child['createdAt'])
+           mostRecent = child['createdAt']
+         end
+       end
+    end
+    if (dateIndexes.length() > 1) 
+        dateIndexes.each do | childIndex |
+          if (node['children'][childIndex]['createdAt'] != mostRecent) 
+            puts "Retaining #{field} at index #{childIndex} for #{node['pid']}"
+          else 
+            puts "Removing #{field} at index #{childIndex} for #{node['pid']}"
+            node['children'].delete_at childIndex
+          end
+        end
+    end
+  else
+    node["children"].each do |child|
+       if (isContainer(child)) 
+           dedupeField(child, field, node)
+       end    
+    end
+  end
+end
+
 def visit(node, parent=nil)
     #listMetadata node
     if (node['type']['name'] == 'item' && !parent.nil? && !getField(node, 'externalPID').empty? && getField(node, "hasVideo") == "true")
@@ -211,7 +243,7 @@ def createXmlDoc(node, parent)
   pf '  <field name="shadowed_location_f_stored">VISIBLE</field>'
   pf '  <field name="library_f_stored">Special Collections</field>'
   pf '  <field name="terms_of_use_a">Each user of the WSLS materials must individually evaluate any copyright or privacy issues that might pertain to the intended uses of these materials, including fair use. &lt;a href="https://copyright.library.virginia.edu/wsls_use/"&gt;Read More.&lt;/a&gt;</field>'
-  pf '  <field name="notes_f_stored">Please note, some contents from this collection may contain harmful, offensive, or insensitive language. In an effort to represent resources as accurately as possible, library staff transcribe information exactly as it appears in its original context.</field>'
+  pf '  <field name="note_f_stored">Please note, some contents from this collection may contain harmful, offensive, or insensitive language. In an effort to represent resources as accurately as possible, library staff transcribe information exactly as it appears in its original context.</field>'
   node["children"].each do |child|
     printSolrField child, node
   end
@@ -224,6 +256,8 @@ end
 #TODO: pull the file from apollo each time (https://apollo.lib.virginia.edu/api/collections/uva-an109873)
 json_text = File.read("wsls/wsls.json")
 hash = JSON.parse(json_text);
+
+dedupeField(hash, 'dateCreated')
 
 excerpt_text = File.read("wsls/wsls_excerpts.json")
 $excerpt_hash = JSON.parse(excerpt_text);
