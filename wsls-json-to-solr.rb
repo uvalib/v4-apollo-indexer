@@ -1,15 +1,23 @@
 require 'json'
 require 'net/http'
+require 'fileutils'
 
 def pf(string)
-    File.write("wsls-collection-solr.xml", "#{string}\n", mode: "a")
+    $file.write("#{string}\n")
 end
 
-def getScriptText(url)
-  uri = URI.parse(url)
-  response = Net::HTTP.get_response uri
-  text = response.body if response.code == "200"
-  text || ''
+def getScriptText(id)
+  cacheFilename = "wsls/cache/#{id}-script.txt"
+  if (File.exist? cacheFilename)
+     File.read(cacheFilename)
+  else 
+    url = "https://wsls.lib.virginia.edu/#{id}/#{id}.txt"
+    uri = URI.parse(url)
+    response = Net::HTTP.get_response uri
+    text = response.body if response.code == "200"
+    File.write(cacheFilename, text || '')
+    text || ''
+  end
 end
 
 
@@ -42,6 +50,9 @@ def visit(node, parent=nil)
         createXmlDoc(node, parent)
     else 
       puts "Skipping #{node['type']['name']} node."
+      if (!getField(node, 'externalPID').empty? && getField(node, "hasVideo") != "true") 
+         $deleteIds.write("#{getField(node, 'externalPID')}\n")
+      end
     end
     node["children"].each do |child|
        if (isContainer(child)) 
@@ -163,7 +174,7 @@ end
 def scriptFields(node, parent)
   if (node['value'] == 'true')
      id = getField(parent, 'wslsID') 
-     scriptText = getScriptText("https://wsls.lib.virginia.edu/#{id}/#{id}.txt")
+     scriptText = getScriptText(id)
      "<field name=\"url_script_pdf\">https://wsls.lib.virginia.edu/#{id}/#{id}.pdf</field>
      <field name=\"url_str_stored\">https://wsls.lib.virginia.edu/#{id}/#{id}.pdf</field>
      <field name=\"url_label_str_stored\">Script PDF</field>
@@ -209,11 +220,28 @@ end
 
 
 #conf.echo = false
-json_text = File.read("wsls.json")
+
+#TODO: pull the file from apollo each time (https://apollo.lib.virginia.edu/api/collections/uva-an109873)
+json_text = File.read("wsls/wsls.json")
 hash = JSON.parse(json_text);
-excerpt_text = File.read("wsls_excerpts.json")
+
+excerpt_text = File.read("wsls/wsls_excerpts.json")
 $excerpt_hash = JSON.parse(excerpt_text);
-pf '<add>'
-visit hash
-pf '</add>'
+
+FileUtils.mkdir_p 'wsls/cache'
+
+begin
+  $file = File.open("wsls/wsls-collection-solr.xml", "w")
+  $deleteIds = File.open("wsls/wsls-hidden.ids", "w")
+  pf '<add>'
+  visit hash
+  pf '</add>'
+
+rescue IOError => e
+  puts "Error! #{e}"
+ensure
+  $file.close unless $file.nil?
+  $deleteIds.close unless $deleteIds.nil?
+end
+
 
