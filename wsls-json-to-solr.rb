@@ -219,7 +219,9 @@ end
 
 def wslsRightsField(node)
    if (node['value'].include? "Local")
-     "<field name=\"cc_uri_a\">https://creativecommons.org/publicdomain/zero/1.0/</field>\n  <field name=\"rs_uri_a\">http://rightsstatements.org/vocab/NoC-US/1.0/</field>"
+     "<field name=\"cc_uri_a\">https://creativecommons.org/licenses/by/4.0/</field>"
+   else 
+     "<field name=\"rs_uri_a\">http://rightsstatements.org/vocab/NoC-US/1.0/</field>"
    end
 end
 
@@ -243,7 +245,7 @@ def createXmlDoc(node, parent)
   pf '  <field name="shadowed_location_f_stored">VISIBLE</field>'
   pf '  <field name="library_f_stored">Special Collections</field>'
   pf '  <field name="terms_of_use_a">Each user of the WSLS materials must individually evaluate any copyright or privacy issues that might pertain to the intended uses of these materials, including fair use. &lt;a href="https://copyright.library.virginia.edu/wsls_use/"&gt;Read More.&lt;/a&gt;</field>'
-  pf '  <field name="note_f_stored">Please note, some contents from this collection may contain harmful, offensive, or insensitive language. In an effort to represent resources as accurately as possible, library staff transcribe information exactly as it appears in its original context.</field>'
+  pf '  <field name="notes_f_stored">Please note, some contents from this collection may contain harmful, offensive, or insensitive language. In an effort to represent resources as accurately as possible, library staff transcribe information exactly as it appears in its original context.</field>'
   node["children"].each do |child|
     printSolrField child, node
   end
