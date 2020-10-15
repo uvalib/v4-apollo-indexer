@@ -232,6 +232,7 @@ def createXmlDoc(node, parent)
   pf '  <field name="anon_availability_f_stored">Online</field>'
   pf '  <field name="circulating_f">true</field>'
   pf '  <field name="call_number_tsearch_stored">MSS 15988</field>'
+  pf '  <field name="source_f_stored">UVA Library Digital Repository</field>'
   pf '  <field name="source_f_stored">WSLS-TV News Film Collection, 1951-1971</field>'
   pf '  <field name="source_tsearch">WSLS-TV News Film Collection, 1951-1971</field>'
   pf '  <field name="wsls_tsearch">wsls</field>'
