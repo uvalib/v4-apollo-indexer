@@ -1,6 +1,7 @@
 require 'json'
 require 'net/http'
 require 'date'
+require 'fileutils'
 
 def pf(string)
     File.write("daily-progress.xml", "#{string}\n", mode: "a")
@@ -71,11 +72,24 @@ def printSolrField(node, parent)
   end
 end
 
+def getManifest(node)
+  cacheFilename = "dp/cache/#{node['value']}-iiif-manifest.txt"
+  if (File.exist? cacheFilename)
+     File.read(cacheFilename)
+  else
+    url = "https://iiifman.lib.virginia.edu/pid/#{node['value']}"
+    uri = URI.parse(url)
+    response = Net::HTTP.get_response uri
+    text = response.body if response.code == "200"
+    File.write(cacheFilename, text || '')
+    text || ''    
+  end    
+end
+
 def pidFields(node)
-  response = Net::HTTP.get_response URI.parse("https://iiifman.lib.virginia.edu/pid/#{node['value']}")
-  sequences=JSON.parse(response.body).values_at("sequences")
-  canvases=sequences[0][0]["canvases"]
-  thumbnail=canvases[0]["thumbnail"]
+    sequences=JSON.parse(getManifest(node)).values_at("sequences")
+    canvases=sequences[0][0]["canvases"]
+    thumbnail=canvases[0]["thumbnail"]
     "  <field name=\"id\">#{node['value']}</field>\n <field name=\"alternate_id_f_stored\">#{node['value']}</field>\n <field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{node['value']}</field>\n <field name=\"rights_wrapper_url_a\">http://rightswrapper2.lib.virginia.edu:8090/rights-wrapper/?pid=#{node['value']}&amp;pagePid=</field>\n <field name=\"work_title3_key_ssort_stored\">unique_#{node['value']}</field>\n <field name=\"work_title2_key_ssort_stored\">unique_#{node['value']}</field>\n <field name=\"thumbnail_url_a\">#{thumbnail}</field>\n"
 end
 
@@ -113,7 +127,13 @@ end
 
 
 #conf.echo = false
-json_text = File.read("daily-progress-sample.json")
+FileUtils.mkdir_p 'dp/cache'
+jsonFile = 'dp/uva-an1054'
+
+# get the file from apollo
+File.write(jsonFile, Net::HTTP.get_response(URI.parse('https://apollo.lib.virginia.edu/api/collections/uva-an1054')).body || '')
+
+json_text = File.read(jsonFile)
 hash = JSON.parse(json_text);
 pf '<add>'
 visit hash
