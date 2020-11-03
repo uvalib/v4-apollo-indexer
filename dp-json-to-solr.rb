@@ -4,7 +4,7 @@ require 'date'
 require 'fileutils'
 
 def pf(string)
-    File.write("daily-progress.xml", "#{string}\n", mode: "a")
+    $file.write("#{string}\n")
 end
 
 def getField(node, name) 
@@ -61,8 +61,12 @@ def printSolrField(node, parent)
   #puts node["type"]["name"]
   case node["type"]["name"]
   when "title"
-    date=DateTime.parse(node["value"].gsub(/Daily Progress, /,'')).strftime('%Y-%m-%d')
-    pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"individual_call_number_a\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"published_daterange\">#{date}</field>\n  <field name=\"published_display_a\">#{date}</field>\n  <field name=\"published_date\">#{date}T00:00:00Z</field>"
+    begin
+      date=DateTime.parse(node["value"].gsub(/Daily Progress, /,'')).strftime('%Y-%m-%d')
+      pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"individual_call_number_a\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"published_daterange\">#{date}</field>\n  <field name=\"published_display_a\">#{date}</field>\n  <field name=\"published_date\">#{date}T00:00:00Z</field>"
+    rescue
+      pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"individual_call_number_a\">#{node['value'].encode(:xml => :text)}</field>"
+    end
   when "externalPID"
     pf pidFields(node)
   when "reel"
@@ -94,12 +98,13 @@ def pidFields(node)
 end
 
 def reelFields(node)
-  "  <field name=\"reel\">#{node['value']}</field>\n"
+  "  <field name=\"reel_tsearch_stored\">#{node['value']}</field>\n"
 end
 
 def createXmlDoc(node, parent)
   pf "<doc>"
   #pf '  <field name="pool_f_stored"> daily_progress</field>'
+  pf '  <field name="collection_note_tsearch_stored">The Daily Progress is the Charlottesville, VA, area newspaper, published daily from 1892 to the present. Issues from 1892 through 1964 have been digitized from the Library\'s set of microfilm and are available for viewing online.</field>'
   pf '  <field name="pool_f_stored">serials</field>'
   pf '  <field name="uva_availability_f_stored">Online</field>'
   pf '  <field name="anon_availability_f_stored">Online</field>'
@@ -109,11 +114,9 @@ def createXmlDoc(node, parent)
   pf '  <field name="data_source_f_stored">daily progress</field>'
   pf '  <field name="digital_collection_f_stored">Daily Progress Digitized Microfilm</field>'
   pf '  <field name="shadowed_location_f_stored">VISIBLE</field>'
-  pf '  <field name="library_f_stored">Special Collections</field>'
   pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[0]}</field>"
   pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[1]}</field>"
   pf "  <field name=\"identifier_e_stored\"> #{$ancestorPIDs[2]}</field>"
-  pf '  <field name="call_number_tsearch_stored"/>'
   pf '  <field name="dailyprogress_tsearch">daily progress digitized microfilm digital scan newspaper charlottesville</field>'
   pf '  <field name="pdf_url_a">https://pdfservice.lib.virginia.edu/pdf</field>'
   pf '  <field name="feature_f_stored">iiif</field>'
@@ -135,8 +138,15 @@ File.write(jsonFile, Net::HTTP.get_response(URI.parse('https://apollo.lib.virgin
 
 json_text = File.read(jsonFile)
 hash = JSON.parse(json_text);
-pf '<add>'
-visit hash
-pf '</add>'
+begin
+  $file = File.open("dp/daily-progress-collection-solr.xml", "w")
+  pf '<add>'
+  visit hash
+  pf '</add>'
+rescue IOError => e
+  puts "Error! #{e}"
+ensure
+  $file.close unless $file.nil?
+end
 
 
