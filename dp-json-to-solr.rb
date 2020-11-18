@@ -109,7 +109,7 @@ def pidFields(node)
   metadata['parts'] = []
   metadata['parts'].push(part);
   File.open("dp/dcs/#{pid}", "w").write(metadata.to_json)
-    "<field name=\"id\">#{pid}</field>\n<field name=\"work_title3_key_ssort_stored\">unique_#{pid}</field>\n<field name=\"work_title2_key_ssort_stored\">unique_#{pid}</field>\n<field name=\"digital_content_service_url_e_stored\">https://digital-content-metadata-cache-production.s3.amazonaws.com/#{pid}</field>\n<field name=\"thumbnail_url_a\">#{thumbnail}</field>"
+    "<field name=\"id\">#{pid}</field>\n<field name=\"url_oembed_stored\">https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{pid}</field>\n  <field name=\"work_title3_key_ssort_stored\">unique_#{pid}</field>\n<field name=\"work_title2_key_ssort_stored\">unique_#{pid}</field>\n<field name=\"digital_content_service_url_e_stored\">https://digital-content-metadata-cache-production.s3.amazonaws.com/#{pid}</field>\n<field name=\"thumbnail_url_a\">#{thumbnail}</field>"
 
 end
 
@@ -133,8 +133,8 @@ def createXmlDoc(node, parent)
   pf "  <field name=\"identifier_e_stored\">#{$ancestorPIDs[1]}</field>"
   pf "  <field name=\"identifier_e_stored\">#{$ancestorPIDs[2]}</field>"
   pf '  <field name="dailyprogress_tsearch">daily progress digitized microfilm digital scan newspaper charlottesville</field>'
-  pf '  <field name="url_str_stored">https://search-dev.lib.virginia.edu/search?mode=advanced&amp;q=keyword%3A%20%7B%2a%7D&amp;exclude=articles,books,images,jmrl,archival,maps,music-recordings,musical-scores,sound-recordings,thesis,video,worldcat&amp;pool=journals&amp;filter=%7B%22FacetCollection%22%3A%5B%22Daily%20Progress%20Digitized%20Microfilm%22%5D%7D&amp;sort=SortDatePublished_asc</field>'
-  pf '  <field name="url_label_str_stored">Browse all Issues</field>'
+  pf '  <field name="url_supp_str_stored">https://search.lib.virginia.edu/search?mode=advanced&amp;q=keyword%3A%20%7B%2a%7D&amp;exclude=articles,books,images,jmrl,archival,maps,music-recordings,musical-scores,sound-recordings,thesis,video,worldcat&amp;pool=journals&amp;filter=%7B%22FacetCollection%22%3A%5B%22Daily%20Progress%20Digitized%20Microfilm%22%5D%7D&amp;sort=SortDatePublished_asc</field>'
+  pf '  <field name="url_label_supp_str_stored">Browse all Issues</field>'
   pf '  <field name="feature_f_stored">iiif</field>'
   node["children"].each do |child|
     printSolrField child, node
