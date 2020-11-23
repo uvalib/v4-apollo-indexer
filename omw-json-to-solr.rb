@@ -97,7 +97,7 @@ def createLinkDigitalContentMetadata(node, parent, pid)
   part['iiif_manifest_url'] = "https://s3.us-east-1.amazonaws.com/iiif-manifest-cache-production/pid-#{partPid.sub(':', '-')}"
   part['oembed_url'] = "https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{partPid}"
   part['label'] = partLabel
-  part['pdf'] = { 'urls' => { 'delete' => "https://pdfservice.lib.virginia.edu/pdf/#{partPid}/delete", 'download' => "https://pdfservice.lib.virginia.edu/pdf/#{partPid}/download", 'generate' => "https://pdfservice.lib.virginia.edu/pdf/#{partPid}/generate", 'status' => "https://pdfservice.lib.virginia.edu/pdf/#{partPid}/status"}}
+  part['pdf'] = { 'urls' => { 'delete' => "https://pdfservice.lib.virginia.edu/pdf/#{partPid}/delete", 'download' => "https://pdfservice.lib.virginia.edu/pdf/#{partPid}/download", 'generate' => "https://pdfservice.lib.virginia.edu/pdf/#{partPid}", 'status' => "https://pdfservice.lib.virginia.edu/pdf/#{partPid}/status"}}
   part['pid'] = partPid
   part['thumbnail_url'] = thumbnail
   $metadata['parts'].push(part);

@@ -102,7 +102,7 @@ def pidFields(node)
   part['iiif_manifest_url'] = "https://s3.us-east-1.amazonaws.com/iiif-manifest-cache-production/pid-#{pid.sub(':', '-')}"
   part['oembed_url'] = "https://curio.lib.virginia.edu/oembed?url=https://curio.lib.virginia.edu/view/#{pid}"
   part['label'] = partLabel
-  part['pdf'] = { 'urls' => { 'delete' => "https://pdfservice.lib.virginia.edu/pdf/#{pid}/delete", 'download' => "https://pdfservice.lib.virginia.edu/pdf/#{pid}/download", 'generate' => "https://pdfservice.lib.virginia.edu/pdf/#{pid}/generate", 'status' => "https://pdfservice.lib.virginia.edu/pdf/#{pid}/status"}}
+  part['pdf'] = { 'urls' => { 'delete' => "https://pdfservice.lib.virginia.edu/pdf/#{pid}/delete", 'download' => "https://pdfservice.lib.virginia.edu/pdf/#{pid}/download", 'generate' => "https://pdfservice.lib.virginia.edu/pdf/#{pid}", 'status' => "https://pdfservice.lib.virginia.edu/pdf/#{pid}/status"}}
   part['pid'] = pid
   part['thumbnail_url'] = thumbnail
   metadata = {};
