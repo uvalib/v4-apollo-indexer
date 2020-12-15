@@ -176,7 +176,7 @@ def printSolrField(node, parent)
   when "externalPID"
     pf pidFields(node, parent)
   when "wslsID" 
-    pf "  <field name=\"identifier_e_stored\">#{node['value']}</field>\n  <field name=\"work_title3_key_ssort_stored\">WSLS_#{node['value']}</field>\n  <field name=\"thumbnail_url_a\">https://wsls.lib.virginia.edu/#{node['value']}/#{node['value']}-thumbnail.jpg</field>"
+    pf "  <field name=\"identifier_e_stored\">#{node['value']}</field>\n  <field name=\"work_title3_key_ssort_stored\">WSLS_#{node['value']}</field>\n  <field name=\"work_title2_key_ssort_stored\">WSLS_#{node['value']}</field>\n  <field name=\"thumbnail_url_a\">https://wsls.lib.virginia.edu/#{node['value']}/#{node['value']}-thumbnail.jpg</field>"
   when "hasVideo"
     pf videoFields(node, parent)
   when "hasScript"
