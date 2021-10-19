@@ -29,7 +29,20 @@ def isContainer(node)
    node["type"]["container"]
 end
 
+$count = 0
+def visitToCount(node, parent=nil)
+    if node['type']['name'] == 'issue' && !parent.nil? && !getField(node, 'externalPID').empty?
+        $count = $count + 1
+    end
+    node["children"].each do |child|
+       if (isContainer(child))
+           visitToCount(child, node)
+       end
+    end
+end
+
 $ancestorPIDs = []
+$current = 0;
 def visit(node, parent=nil)
     #listMetadata node
     if node['type']['name'] == 'collection' && !getField(node, 'externalPID').empty?
@@ -62,8 +75,9 @@ def printSolrField(node, parent)
   case node["type"]["name"]
   when "title"
     begin
-      date=DateTime.parse(node["value"].gsub(/Daily Progress, /,'')).strftime('%Y-%m-%d')
-      pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"published_daterange\">#{date}</field>\n  <field name=\"published_display_a\">#{date}</field>\n  <field name=\"published_date\">#{date}T00:00:00Z</field>"
+      date=DateTime.parse(node["value"].gsub(/Daily Progress, /,''))
+      title = "Daily Progress, #{date.strftime('%A %B %-d, %Y')}"
+      pf "  <field name=\"title_tsearch_stored\">#{title.encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{title.encode(:xml => :text)}</field>\n  <field name=\"published_daterange\">#{date.strftime('%Y-%m-%d')}</field>\n  <field name=\"published_display_a\">#{date.strftime('%Y-%m-%d')}</field>\n  <field name=\"published_date\">#{date.strftime('%Y-%m-%d')}T00:00:00Z</field>"
     rescue
       pf "  <field name=\"title_tsearch_stored\">#{node['value'].encode(:xml => :text)}</field>\n  <field name=\"full_title_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>"
     end
@@ -120,7 +134,6 @@ end
 def createXmlDoc(node, parent)
   pf "<doc>"
   #pf '  <field name="pool_f_stored"> daily_progress</field>'
-  pf '  <field name="collection_note_tsearch_stored">The Daily Progress is the Charlottesville, VA, area newspaper, published daily from 1892 to the present. Issues from 1892 through 1964 have been digitized from the Library\'s set of microfilm and are available for viewing online.</field>'
   pf '  <field name="pool_f_stored">serials</field>'
   pf '  <field name="uva_availability_f_stored">Online</field>'
   pf '  <field name="anon_availability_f_stored">Online</field>'
@@ -133,13 +146,20 @@ def createXmlDoc(node, parent)
   pf "  <field name=\"identifier_e_stored\">#{$ancestorPIDs[1]}</field>"
   pf "  <field name=\"identifier_e_stored\">#{$ancestorPIDs[2]}</field>"
   pf '  <field name="dailyprogress_tsearch">daily progress digitized microfilm digital scan newspaper charlottesville</field>'
-  pf '  <field name="url_supp_str_stored">https://search.lib.virginia.edu/search?mode=advanced&amp;q=keyword%3A%20%7B%2a%7D&amp;exclude=articles,books,images,jmrl,archival,maps,music-recordings,musical-scores,sound-recordings,thesis,video,worldcat&amp;pool=journals&amp;filter=%7B%22FacetCollection%22%3A%5B%22Daily%20Progress%20Digitized%20Microfilm%22%5D%7D&amp;sort=SortDatePublished_asc</field>'
-  pf '  <field name="url_label_supp_str_stored">Browse all Issues</field>'
+  #pf '  <field name="url_supp_str_stored">https://search.lib.virginia.edu/search?mode=advanced&amp;q=keyword%3A%20%7B%2a%7D&amp;exclude=articles,books,images,jmrl,archival,maps,music-recordings,musical-scores,sound-recordings,thesis,video,worldcat&amp;pool=journals&amp;filter=%7B%22FacetCollection%22%3A%5B%22Daily%20Progress%20Digitized%20Microfilm%22%5D%7D&amp;sort=SortDatePublished_asc</field>'
+  #pf '  <field name="url_label_supp_str_stored">Browse all Issues</field>'
   pf '  <field name="feature_f_stored">iiif</field>'
+  $current = $current + 1
+  pf " <field name=\"collection_position_a\">issue #{format_number($current)} of #{format_number($count)}</field>"
   node["children"].each do |child|
     printSolrField child, node
   end
   pf "</doc>"
+end
+
+def format_number(number)
+  num_groups = number.to_s.chars.to_a.reverse.each_slice(3)
+  num_groups.map(&:join).join(',').reverse
 end
 
 
@@ -153,6 +173,7 @@ File.write(jsonFile, Net::HTTP.get_response(URI.parse('https://apollo.lib.virgin
 
 json_text = File.read(jsonFile)
 hash = JSON.parse(json_text);
+visitToCount hash
 begin
   $file = File.open("dp/daily-progress-collection-solr.xml", "w")
   pf '<add>'
