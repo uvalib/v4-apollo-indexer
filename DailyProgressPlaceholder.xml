@@ -1,0 +1,23 @@
+<add>
+<doc>
+  <field name="pool_f_stored">serials</field>
+  <field name="uva_availability_f_stored">Online</field>
+  <field name="anon_availability_f_stored">Online</field>
+  <field name="format_f">Online</field>
+  <field name="circulating_f">true</field>
+  <field name="data_source_f_stored">Virgo 3</field>
+  <field name="collection_head_str_stored">Daily Progress Digitized Microfilm</field>
+  <field name="shadowed_location_f_stored">VISIBLE</field>
+  <field name="title_tsearch_stored">Daily Progress Digitized Microfilm</field>
+  <field name="title_tsearch">daily progress</field>
+  <field name="subject_tsearch">daily progress</field>
+  <field name="full_title_tsearchf_stored">Daily Progress Digitized Microfilm</field>
+  <field name="boost_a">1000-g</field>
+  <field name="id">uva-lib:2137307</field>
+  <field name="work_title1_key_ssort_stored">daily_progress_charlottesville_va/charlottesville_va_j_h_lindsay</field>
+  <field name="work_title2_key_ssort_stored">daily_progress_charlottesville_va/charlottesville_va_j_h_lindsay/Serial</field>
+  <field name="mss_work_key_ssort_stored">daily_progress_charlottesville_va//Serial</field>
+  <field name="url_supp_str_stored">https://guides.lib.virginia.edu/Daily-Progress-Digital</field>
+  <field name="url_label_supp_str_stored">Guide to this collection</field>
+</doc>
+</add>
