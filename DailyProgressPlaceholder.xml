@@ -27,7 +27,10 @@
   <field name="work_title_tsearch_stored">Daily progress (Charlottesville, Va.)</field>
   <field name="publisher_name_a">J.H. Lindsay</field>
   <field name="published_location_a">Charlottesville, Va</field>
-  <field name="published_display_a">1892 - present</field>
+  <field name="published_display_a">1892 - present (1893 - 1964 Available Online)</field>
   <field name="language_a">English</field>
+  <field name="publication_frequency_a">Daily, &lt;June 23, 1983- &gt;</field>
+  <field name="publication_frequency_a">Daily (except Sun.)</field>
+  <field name="publication_frequency_a">Daily (except Christmas)</field>
 </doc>
 </add>
