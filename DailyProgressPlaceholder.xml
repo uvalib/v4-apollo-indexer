@@ -19,5 +19,15 @@
   <field name="mss_work_key_ssort_stored">daily_progress_charlottesville_va//Serial</field>
   <field name="url_supp_str_stored">https://guides.lib.virginia.edu/Daily-Progress-Digital</field>
   <field name="url_label_supp_str_stored">Guide to this collection</field>
+  <!-- copied from the microfilm record -->
+  <field name="subject_f_stored">Charlottesville (Va.) -- Newspapers</field>
+  <field name="journal_title_addnl_a">Daily progress (Charlottesville, Va.)</field>
+  <field name="publication_history_a">Sept. 14, 1892-</field>
+  <field name="region_a">Charlottesville (Va.)</field>
+  <field name="work_title_tsearch_stored">Daily progress (Charlottesville, Va.)</field>
+  <field name="publisher_name_a">J.H. Lindsay</field>
+  <field name="published_location_a">Charlottesville, Va</field>
+  <field name="published_display_a">1892 - present</field>
+  <field name="language_a">English</field>
 </doc>
 </add>
