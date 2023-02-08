@@ -3,7 +3,9 @@ require 'net/http'
 require 'fileutils'
 
 def pf(string)
-    $file.write("#{string}\n")
+   if (string && string.length > 0) 
+      $file.write("#{string}\n")
+   end
 end
 
 def getScriptText(id)
@@ -20,6 +22,40 @@ def getScriptText(id)
   end
 end
 
+#https://wsls.lib.virginia.edu/0014_1/0014_1.vtt 
+def getTranscriptText(id)
+  cacheFilename = "wsls/cache/#{id}-transcript.vtt"
+  if (File.exist? cacheFilename)
+     File.read(cacheFilename)
+  else 
+    url = "https://wsls.lib.virginia.edu/#{id}/#{id}.vtt"
+    uri = URI.parse(url)
+    response = Net::HTTP.get_response uri
+    text = response.body if response.code == "200"
+    File.write(cacheFilename, text || '')
+    text || ''
+  end
+end
+
+def getTranscriptTextOnly(id)
+  text = getTranscriptText(id)
+  new_text = ""
+  if (text =~ /^WEBVTT.*/ ) 
+    i = 0
+    text.each_line do |line|
+      line = line.chomp
+      if (i == 4) 
+         new_text += line + " "
+         i = 0
+      end
+      i = i + 1 
+    end
+#    puts(new_text)
+#  else 
+#     puts("not_found" + text)
+  end 
+  new_text
+end
 
 def getField(node, name) 
     value = ""
@@ -104,7 +140,7 @@ def wslsTagFields(node)
 end
 
 def wslsColorField(node)
-   '<field name="video_color_a">BW</field>' if (!node['value'].include? 'color') 
+   '  <field name="video_color_a">BW</field>' if (!node['value'].include? 'color') 
 end
 
 def runtimeField(node)
@@ -179,6 +215,7 @@ def printSolrField(node, parent)
     pf "  <field name=\"identifier_e_stored\">#{node['value']}</field>\n  <field name=\"work_title3_key_ssort_stored\">WSLS_#{node['value']}</field>\n  <field name=\"work_title2_key_ssort_stored\">WSLS_#{node['value']}</field>\n  <field name=\"thumbnail_url_a\">https://wsls.lib.virginia.edu/#{node['value']}/#{node['value']}-thumbnail.jpg</field>"
   when "hasVideo"
     pf videoFields(node, parent)
+    pf transcriptFields(node, parent)
   when "hasScript"
     pf scriptFields(node, parent)
   when "wslsRights"
@@ -188,6 +225,9 @@ def printSolrField(node, parent)
   when "digitalObject"
   when "filmBoxLabel"
   when "wslsPlace"
+    pf "  <field name=\"subject_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>"
+  when "entity"
+    pf "  <field name=\"subject_tsearchf_stored\">#{node['value'].encode(:xml => :text)}</field>"
   else
     pf "<!-- skipped #{node['type']['name']}: #{node['value']} -->"
   end
@@ -207,14 +247,29 @@ def scriptFields(node, parent)
   if (node['value'] == 'true')
      id = getField(parent, 'wslsID') 
      scriptText = getScriptText(id)
-     "<field name=\"url_script_pdf\">https://wsls.lib.virginia.edu/#{id}/#{id}.pdf</field>
-     <field name=\"url_str_stored\">https://wsls.lib.virginia.edu/#{id}/#{id}.pdf</field>
-     <field name=\"url_label_str_stored\">Script PDF</field>
-     <field name=\"url_script_txt\">https://wsls.lib.virginia.edu/#{id}/#{id}.txt</field>
-     <field name=\"url_str_stored\">https://wsls.lib.virginia.edu/#{id}/#{id}.txt</field>
-     <field name=\"url_label_str_stored\">Script Text</field>
-     <field name=\"anchor_script_tsearch\">#{scriptText.encode(:xml => :text)}}</field>"
+     "  <field name=\"url_script_pdf\">https://wsls.lib.virginia.edu/#{id}/#{id}.pdf</field>\n"+
+     "  <field name=\"url_str_stored\">https://wsls.lib.virginia.edu/#{id}/#{id}.pdf</field>\n"+
+     "  <field name=\"url_label_str_stored\">Script PDF</field>\n"+
+     "  <field name=\"url_script_txt\">https://wsls.lib.virginia.edu/#{id}/#{id}.txt</field>\n"+
+     "  <field name=\"url_str_stored\">https://wsls.lib.virginia.edu/#{id}/#{id}.txt</field>\n"+
+     "  <field name=\"url_label_str_stored\">Script Text</field>\n"+
+     "  <field name=\"anchor_script_tsearch\">#{scriptText.encode(:xml => :text)}</field>\n"+
+     "  <field name=\"fulltext_large_highlight\">#{scriptText.encode(:xml => :text)}</field>\n"
   end
+end
+
+# called if the item has video.  Presumedly there will only be a transcription or the video if there is a video
+def transcriptFields(node, parent)
+  ret = nil
+  if (node['value'] == 'true')
+     id = getField(parent, 'wslsID') 
+     transcriptText = getTranscriptTextOnly(id)
+     if (transcriptText.length > 0) 
+        ret = "  <field name=\"transcript_tsearch\">#{transcriptText.encode(:xml => :text)}</field>"+
+              "  <field name=\"fulltext_large_highlight\">#{transcriptText.encode(:xml => :text)}</field>\n"
+     end
+  end
+  ret || ''
 end
 
 def wslsRightsField(node)
